@@ -59,9 +59,22 @@
         }
     </script>
     
-    <!-- Google Maps API (Primary) -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMM7LuzEcgPypFzo1RH5Dv1HWoOre5LY4&libraries=geocoding" 
-            onerror="loadLeaflet()" defer></script>
+    <!-- Load configuration file for API keys -->
+    <script src="config.js"></script>
+    
+    <!-- Dynamically load Google Maps API -->
+    <script>
+        function loadGoogleMapsAPI() {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${config.GOOGLE_MAPS_API_KEY}&libraries=geocoding`;
+            script.onerror = loadLeaflet;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+        
+        // Load Google Maps API after page loads
+        window.addEventListener('DOMContentLoaded', loadGoogleMapsAPI);
+    </script>
     
     <!-- Leaflet CSS and JS (Fallback) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"

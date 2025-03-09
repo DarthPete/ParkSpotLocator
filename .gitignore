@@ -1,0 +1,18 @@
+# API Keys and configuration
+config.js
+.env
+
+# Node modules
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+/dist/
+/build/ 
