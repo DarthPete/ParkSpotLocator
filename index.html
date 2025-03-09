@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Spot Reminder | Never Forget Where You Parked</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Never forget where you parked. Mark your spot, set a reminder, and easily find your car when you return.">
+    <meta name="keywords" content="parking reminder, find my car, parking spot locator, car finder">
+    <meta name="author" content="Parking Spot Reminder">
+    
+    <!-- Resource Hints for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://maps.googleapis.com">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    
+    <!-- Basic Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://maps.googleapis.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com https://unpkg.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://*.googleapis.com https://*.gstatic.com https://unpkg.com https://*.unsplash.com https://*.tile.openstreetmap.org data:; connect-src 'self' https://nominatim.openstreetmap.org http://ip-api.com;">
+    
+    <!-- Google Fonts - Roboto and Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'roboto': ['Roboto', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'parking': "url('https://images.unsplash.com/photo-1506526804006-62aa2b3a66a2?auto=format&q=80')",
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        success: {
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        danger: {
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Maps API (Primary) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMM7LuzEcgPypFzo1RH5Dv1HWoOre5LY4&libraries=geocoding" 
+            onerror="loadLeaflet()" defer></script>
+    
+    <!-- Leaflet CSS and JS (Fallback) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin="" defer></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Main JavaScript -->
+    <script src="script.js" defer></script>
+    
+    <!-- Structured Data for Rich Results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Parking Spot Reminder",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "Any",
+      "description": "Never forget where you parked. Mark your spot, set a reminder, and easily find your car when you return.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+</head>
+<body class="bg-gray-100 font-roboto min-h-screen flex flex-col">
+    <!-- Skip to Main Content Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:p-4 focus:bg-blue-700 focus:text-white focus:z-50">
+        Skip to main content
+    </a>
+
+    <!-- Fixed Header -->
+    <header class="bg-gray-900 text-white py-4 px-6 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Logo and Title -->
+            <div class="flex items-center">
+                <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center mr-3" aria-hidden="true">
+                    <span class="material-icons text-2xl">local_parking</span>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-bold">Parking Spot Reminder</h1>
+            </div>
+            
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-button" class="sm:hidden text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-2" aria-label="Toggle menu" aria-expanded="false">
+                <span class="material-icons">menu</span>
+            </button>
+            
+            <!-- Navigation -->
+            <nav id="main-nav" class="hidden sm:flex space-x-6" aria-label="Main navigation">
+                <a href="#map-section" class="hover:text-blue-400 transition flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1">
+                    <span class="material-icons text-sm mr-1" aria-hidden="true">map</span>
+                    Map
+                </a>
+                <a href="#how-it-works" class="hover:text-blue-400 transition flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1">
+                    <span class="material-icons text-sm mr-1" aria-hidden="true">help_outline</span>
+                    How It Works
+                </a>
+                <a href="#contact" class="hover:text-blue-400 transition flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1">
+                    <span class="material-icons text-sm mr-1" aria-hidden="true">mail_outline</span>
+                    Contact
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-menu" class="hidden sm:hidden mt-4 pb-2 px-4 space-y-3">
+            <a href="#map-section" class="block py-2 px-4 text-white hover:bg-gray-800 rounded-md transition flex items-center">
+                <span class="material-icons text-sm mr-2" aria-hidden="true">map</span>
+                Map
+            </a>
+            <a href="#how-it-works" class="block py-2 px-4 text-white hover:bg-gray-800 rounded-md transition flex items-center">
+                <span class="material-icons text-sm mr-2" aria-hidden="true">help_outline</span>
+                How It Works
+            </a>
+            <a href="#contact" class="block py-2 px-4 text-white hover:bg-gray-800 rounded-md transition flex items-center">
+                <span class="material-icons text-sm mr-2" aria-hidden="true">mail_outline</span>
+                Contact
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-grow">
+        <!-- Hero Section with How It Works -->
+        <section class="relative bg-parking bg-cover bg-center" aria-label="Introduction">
+            <div class="absolute inset-0 bg-gray-900/70"></div>
+            <div class="relative max-w-4xl mx-auto px-4 py-16 text-center text-white">
+                <h2 class="text-4xl sm:text-5xl font-bold mb-4">Never Forget Where You Parked</h2>
+                <p class="text-xl text-gray-200 mb-8">Mark your spot, set a reminder, and find your car with ease.</p>
+                <a href="#map-section" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-gray-900">
+                    <span class="material-icons mr-2" aria-hidden="true">arrow_downward</span>
+                    Get Started
+                </a>
+            </div>
+        </section>
+
+        <!-- Map and Controls Section -->
+        <section id="map-section" class="bg-white py-8" aria-label="Map and controls">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Map Container (60%) -->
+                    <div class="lg:w-3/5">
+                        <div id="map-container" class="relative w-full h-[70vh] lg:h-[80vh] rounded-xl shadow-lg overflow-hidden" aria-label="Interactive map">
+                            <div id="map" class="w-full h-full" aria-label="Map" role="application"></div>
+                            <div id="map-loading" class="absolute inset-0 bg-white/90 flex items-center justify-center text-lg text-gray-700" aria-live="polite">
+                                <span class="material-icons mr-2" aria-hidden="true">sync</span>
+                                Loading map...
+                            </div>
+                            <div id="manual-marking-message" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                                 bg-gray-900/90 text-white px-6 py-3 rounded-lg text-center pointer-events-none transition-opacity" aria-live="polite">
+                                <span class="material-icons mb-2" aria-hidden="true">touch_app</span>
+                                Click on the map to mark your parking spot
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls Container (40%) -->
+                    <div class="lg:w-2/5">
+                        <div class="bg-white rounded-xl shadow-lg p-6 space-y-6">
+                            <!-- Search Bar -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-semibold text-gray-900" id="search-heading">Search Location</h3>
+                                <div class="flex gap-3" role="search" aria-labelledby="search-heading">
+                                    <input type="text" id="search-input" placeholder="Search location (e.g., London, UK)" 
+                                           class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                                           autocomplete="off" aria-label="Enter location to search">
+                                    <button id="search-button" 
+                                            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                            aria-label="Search for location">
+                                        <span class="material-icons mr-2" aria-hidden="true">search</span>
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Message Area -->
+                            <div id="message" class="text-red-500 text-center hidden" aria-live="assertive" role="alert"></div>
+
+                            <!-- Reminder Settings -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-semibold text-gray-900" id="reminder-heading">Reminder Settings</h3>
+                                <div class="bg-gray-50 rounded-lg p-4 space-y-4" aria-labelledby="reminder-heading">
+                                    <div class="flex items-center gap-3">
+                                        <label for="reminder-time" class="text-gray-700">Set Reminder (minutes):</label>
+                                        <input type="number" id="reminder-time" value="30" min="1" max="1440" disabled
+                                               class="w-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                               aria-describedby="reminder-time-description">
+                                        <span id="reminder-time-description" class="sr-only">Set a reminder in minutes for your parking spot</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="enable-reminder" name="enable-reminder"
+                                               class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                        <label for="enable-reminder" class="text-gray-700">Enable Reminder</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="space-y-3" aria-label="Parking actions">
+                                <button id="mark-location" 
+                                        class="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                                        aria-label="Mark your current parking spot">
+                                    <span class="material-icons mr-2" aria-hidden="true">local_parking</span>
+                                    Mark Parking Spot
+                                </button>
+                                <button id="find-location" 
+                                        class="hidden w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                        aria-label="Find your saved parking spot">
+                                    <span class="material-icons mr-2" aria-hidden="true">directions_car</span>
+                                    Find My Car
+                                </button>
+                                <button id="clear-location" 
+                                        class="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-red-300"
+                                        aria-label="Clear saved parking spot">
+                                    <span class="material-icons mr-2" aria-hidden="true">clear</span>
+                                    Clear Saved Spot
+                                </button>
+                            </div>
+
+                            <!-- Location Details -->
+                            <div id="location-details" class="bg-gray-50 rounded-lg p-4 text-center text-gray-700" aria-live="polite">
+                                <p>No parking spot saved</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="bg-gray-50 py-16" aria-labelledby="how-it-works-heading">
+            <div class="max-w-5xl mx-auto px-4">
+                <h2 id="how-it-works-heading" class="text-3xl font-bold text-center text-gray-900 mb-12">How It Works</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white p-8 rounded-xl shadow-lg text-center transform hover:scale-105 transition-transform">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6" aria-hidden="true">
+                            <span class="material-icons text-blue-600 text-3xl">local_parking</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-4">Mark Your Spot</h3>
+                        <p class="text-gray-600">Use GPS or search to mark your parking location with just one click.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-lg text-center transform hover:scale-105 transition-transform">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6" aria-hidden="true">
+                            <span class="material-icons text-blue-600 text-3xl">alarm</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-4">Set a Reminder</h3>
+                        <p class="text-gray-600">Never overstay - get notified when it's time to return to your car.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-lg text-center transform hover:scale-105 transition-transform">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6" aria-hidden="true">
+                            <span class="material-icons text-blue-600 text-3xl">directions_car</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-4">Find Your Car</h3>
+                        <p class="text-gray-600">Get instant directions back to your parking spot, anytime.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="bg-white py-16" aria-labelledby="contact-heading">
+            <div class="max-w-4xl mx-auto px-4 text-center">
+                <h2 id="contact-heading" class="text-3xl font-bold text-gray-900 mb-6">Contact Us</h2>
+                <p class="text-xl text-gray-600 mb-8">Have questions or suggestions? We'd love to hear from you!</p>
+                <a href="mailto:contact@parkingspotreminder.com" 
+                   class="inline-flex items-center px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    <span class="material-icons mr-2" aria-hidden="true">mail</span>
+                    Send us an email
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Privacy Policy Banner -->
+    <div id="privacy-banner" class="fixed bottom-0 left-0 right-0 bg-gray-900/95 text-white py-4 px-6 z-50 flex flex-col sm:flex-row items-center justify-center gap-4" role="alert" aria-live="assertive">
+        <p class="text-center sm:text-left">This app uses cookies and location data to help you remember your parking spot. 
+           By using this app, you agree to our privacy policy and data collection practices.</p>
+        <div class="flex gap-3">
+            <button id="accept-privacy" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-300" aria-label="Accept privacy policy">
+                <span class="material-icons mr-2" aria-hidden="true">check</span>
+                Accept
+            </button>
+            <button id="reject-privacy" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-300" aria-label="Reject privacy policy">
+                <span class="material-icons mr-2" aria-hidden="true">close</span>
+                Reject
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-8">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center">
+            <div class="text-center sm:text-left mb-4 sm:mb-0">
+                <p>&copy; 2024 Parking Spot Reminder. All rights reserved.</p>
+            </div>
+            <div class="flex gap-6">
+                <a href="https://example.com/privacy" target="_blank" class="hover:text-blue-400 transition flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1" aria-label="View Privacy Policy">
+                    <span class="material-icons text-sm mr-1" aria-hidden="true">privacy_tip</span>
+                    Privacy Policy
+                </a>
+                <a href="https://example.com/terms" target="_blank" class="hover:text-blue-400 transition flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1" aria-label="View Terms of Use">
+                    <span class="material-icons text-sm mr-1" aria-hidden="true">gavel</span>
+                    Terms of Use
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Initialization script for mobile menu -->
+    <script>
+        // Initialize mobile menu
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+                    mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+                    mobileMenu.classList.toggle('hidden');
+                    
+                    // Update icon
+                    const icon = mobileMenuButton.querySelector('.material-icons');
+                    if (icon) {
+                        icon.textContent = isExpanded ? 'menu' : 'close';
+                    }
+                });
+                
+                // Close menu when clicking on links
+                mobileMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                        mobileMenuButton.querySelector('.material-icons').textContent = 'menu';
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
